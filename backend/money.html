@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Add money to KaasuPay</title>
+</head>
+<body style="font-family: sans-serif; max-width: 480px; margin: 40px auto;">
+  <h2>Add money to KaasuPay</h2>
+  <p><input id="token" placeholder="Paste your token" style="width: 100%;"></p>
+  <p><input id="rupees" type="number" value="500"> rupees</p>
+  <button id="pay">Add money</button>
+  <pre id="out"></pre>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    const out = document.getElementById("out");
+
+    document.getElementById("pay").onclick = async () => {
+      const token = document.getElementById("token").value.trim();
+      const amount = Math.round(Number(document.getElementById("rupees").value) * 100); // rupees -> paise
+
+      const res = await fetch("/api/v1/wallet/add-money/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ amount }),
+      });
+      const order = await res.json();
+      if (!res.ok) {
+        out.textContent = JSON.stringify(order, null, 2);
+        return;
+      }
+
+      const rzp = new Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "KaasuPay",
+        order_id: order.orderId,
+        handler: async function (response) {
+          // response has razorpay_payment_id, razorpay_order_id, razorpay_signature
+          const v = await fetch("/api/v1/wallet/add-money/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify(response),
+          });
+          out.textContent = JSON.stringify(await v.json(), null, 2);
+        },
+      });
+      rzp.open();
+    };
+  </script>
+</body>
+</html>
