@@ -70,7 +70,7 @@ async function runTransfer({ fromUserId, toUser, amount, note }) {
           { userId: fromUserId, transactionId: txn._id, direction: "DEBIT", amount, balanceAfter: senderWallet.balance },
           { userId: toUser._id, transactionId: txn._id, direction: "CREDIT", amount, balanceAfter: receiverWallet.balance },
         ],
-        { session }
+        { session, ordered: true }
       );
 
       result = {
