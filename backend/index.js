@@ -1,23 +1,42 @@
 require("dotenv").config(); // must be the very first line
 
-
 const path = require("path");
 const express = require("express");
+const cors = require("cors");
 const rootRouter = require("./routes/index");
 const webhooksRouter = require("./routes/webhooks");
 const { connectDB } = require("./db");
 const { connectRedis } = require("./redis");
-const cors = require("cors");   // with your other requires
 
 const app = express();
-app.use(cors());                // right after this line, before the routes
+app.use(cors());
 
-// NEW: the webhook needs the RAW bytes, so it comes BEFORE express.json()
+// Connect once, reuse across requests (works locally and on Vercel)
+let ready;
+function init() {
+  if (!ready) {
+    ready = connectDB().then(() => {
+      connectRedis(); // no await
+    });
+    ready.catch(() => { ready = null; }); // allow retry if it failed
+  }
+  return ready;
+}
+
+app.use(async (req, res, next) => {
+  try {
+    await init();
+    next();
+  } catch (err) {
+    console.error("DB connection failed:", err.message);
+    res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
+// Webhook needs the RAW bytes, so it comes BEFORE express.json()
 app.use("/api/v1/webhooks", express.raw({ type: "application/json" }), webhooksRouter);
 
 app.use(express.json());
-
-// NEW: serves public/add-money.html
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -34,19 +53,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong on our side" });
 });
 
-async function start() {
-  await connectDB();
-  connectRedis(); // no await
-  app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-  });
+// Only listen when running locally, not on Vercel
+if (!process.env.VERCEL) {
+  init()
+    .then(() => app.listen(3000, () => console.log("Server running on http://localhost:3000")))
+    .catch((err) => {
+      console.error("Could not start:", err.message);
+      process.exit(1);
+    });
 }
 
-start().catch((err) => {
-  console.error("Could not start:", err.message);
-  process.exit(1);
-});
-   if (!process.env.VERCEL) {
-     app.listen(3000, () => console.log("Server running on http://localhost:3000"));
-   }
-   module.exports = app;
+module.exports = app;
