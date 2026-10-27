@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User, Wallet } = require("../db");
 const { JWT_SECRET } = require("../config");
-const authMiddleware = require("../middleware");
+const authMiddleware = require("../authmiddleware");
 const { cacheGet, cacheSet, cacheDel } = require("../redis"); // NEW
 
 const router = express.Router();

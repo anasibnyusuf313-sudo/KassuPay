@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { z } = require("zod");
-const authMiddleware = require("../middleware");
+const authMiddleware = require("../authmiddleware");
 const { PaymentOrder, Wallet } = require("../db");
 const { createGatewayOrder, checkCheckoutSignature } = require("../services/gateway");
 const { creditTopUp } = require("../services/money");

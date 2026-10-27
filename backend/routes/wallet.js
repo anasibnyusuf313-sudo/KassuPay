@@ -1,6 +1,6 @@
 const express = require("express");
 const { z } = require("zod");
-const authMiddleware = require("../middleware");
+const authMiddleware = require("../authmiddleware");
 const { User, Wallet, LedgerEntry, IdempotencyRecord } = require("../db");
 const { MoneyError, runTransfer } = require("../services/money");
 
