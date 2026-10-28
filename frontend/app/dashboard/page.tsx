@@ -95,7 +95,8 @@ export default function DashboardPage() {
         <div className="grid gap-5 lg:grid-cols-5">
           <div className="space-y-5 lg:col-span-2">
             <BalanceCard balance={balance} onRefresh={refreshAll} />
-            <div className="flex gap-2">
+               <div className="flex flex-wrap gap-2">
+              <Link href="/add-money" className={secondaryBtnClass}>Add money</Link>
               <Link href="/withdraw" className={secondaryBtnClass}>Withdraw</Link>
               <Link href="/bank-accounts" className={secondaryBtnClass}>Bank accounts</Link>
             </div>
