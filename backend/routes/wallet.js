@@ -151,6 +151,8 @@ router.get("/transactions", authMiddleware, async (req, res) => {
       withWhom = other ? `${other.firstName} ${other.lastName}` : "Unknown";
     } else if (t && t.type === "TOPUP") {
       withWhom = "Added via Razorpay";
+    } else if (t && t.type === "WITHDRAW") {
+      withWhom = "Withdrawn to bank";
     }
     return {
       transactionId: t ? t._id.toString() : null,

@@ -39,9 +39,9 @@ const Transaction = mongoose.model(
   "Transaction",
   new mongoose.Schema(
     {
-      type: { type: String, required: true, enum: ["DEPOSIT", "TRANSFER", "TOPUP"] }, // TOPUP is new
+      type: { type: String, required: true, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] }, 
       fromUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      toUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      toUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
       note: { type: String, trim: true, maxLength: 50, default: "" },
       status: { type: String, default: "SUCCESS" },

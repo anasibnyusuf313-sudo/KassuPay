@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, clearToken, errorMessage, getToken } from "@/lib/api";
@@ -95,6 +95,10 @@ export default function DashboardPage() {
         <div className="grid gap-5 lg:grid-cols-5">
           <div className="space-y-5 lg:col-span-2">
             <BalanceCard balance={balance} onRefresh={refreshAll} />
+            <div className="flex gap-2">
+              <Link href="/withdraw" className={secondaryBtnClass}>Withdraw</Link>
+              <Link href="/bank-accounts" className={secondaryBtnClass}>Bank accounts</Link>
+            </div>
             <SendMoneyForm onSent={handleSent} />
           </div>
           <div className="lg:col-span-3">
