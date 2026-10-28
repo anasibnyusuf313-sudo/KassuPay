@@ -14,8 +14,7 @@ declare global {
 }
 
 // CHANGE: must match what your create-order route returns
-type CreateOrderResponse = { orderId: string; amount: number; currency: string };
-
+type CreateOrderResponse = { orderId: string; amount: number; currency: string; keyId: string };
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
     if (window.Razorpay) return resolve(true);
@@ -53,7 +52,7 @@ export default function AddMoneyPage() {
 
       // 1. ask OUR backend to create the order
       // CHANGE: the path, and the body if your route expects rupees instead of paise
-      const order = await api<CreateOrderResponse>("/wallet/add-money/create-order", {
+      const order = await api<CreateOrderResponse>("/wallet/add-money/order", {
         method: "POST",
         auth: true,
         body: { amount: Math.round(rupees * 100) },
