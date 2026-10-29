@@ -9,15 +9,15 @@ const { connectDB } = require("./db");
 const { connectRedis } = require("./redis");
 
 const app = express();
+
 const allowedOrigins = [
   "http://localhost:3001",
-  process.env.FRONTEND_URL, // your Vercel address, set later on Render
+  process.env.FRONTEND_URL, // set this in the backend's Vercel env settings
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow tools like Postman (no origin) and the listed sites
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error("Not allowed by CORS"));
     },
@@ -31,7 +31,9 @@ function init() {
     ready = connectDB().then(() => {
       connectRedis(); // no await
     });
-    ready.catch(() => { ready = null; }); // allow retry if it failed
+    ready.catch(() => {
+      ready = null; // allow retry if it failed
+    });
   }
   return ready;
 }
@@ -69,14 +71,9 @@ app.use((err, req, res, next) => {
 // Only listen when running locally, not on Vercel
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
-
-async function start() {
-  await connectDB();
-  connectRedis();
   app.listen(PORT, () => {
     console.log("Server running on port " + PORT);
   });
-}
 }
 
 module.exports = app;

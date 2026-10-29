@@ -1,5 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+if (!API_URL) {
+  console.error("NEXT_PUBLIC_API_URL is not set");
+}
 // ---- token helpers (localStorage only exists in the browser) ----
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -56,8 +59,7 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
 
   let res: Response;
   try {
-    res = await fetch(API_URL + path, settings);
-  } catch {
+      res = await fetch((API_URL ?? "") + path, settings);  } catch {
     // no answer at all: server off, or no internet
     throw new ApiError("Cannot reach the server. Is the backend running?", undefined, true);
   }
