@@ -15,6 +15,15 @@ function firstError(zodError) {
   return `${field}: ${issue.message}`;
 }
 
+// ---------------- LEVEL 1: CREATE AN ORDER ----------------
+const orderSchema = z.object({
+  amount: z
+    .number()
+    .int("must be whole paise")
+    .min(1000, "must be at least 1000 paise")
+    .max(1000000, "must be at most 1000000 paise"),
+});
+
 router.post("/order", authMiddleware, async (req, res) => {
   try {
     const result = orderSchema.safeParse(req.body);
