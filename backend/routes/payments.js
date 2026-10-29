@@ -15,40 +15,36 @@ function firstError(zodError) {
   return `${field}: ${issue.message}`;
 }
 
-// ---------------- LEVEL 1: CREATE AN ORDER ----------------
-const orderSchema = z.object({
-  amount: z
-    .number()
-    .int("must be whole paise")
-    .min(1000, "must be at least 1000 paise")
-    .max(1000000, "must be at most 1000000 paise"),
-});
-
 router.post("/order", authMiddleware, async (req, res) => {
-  const result = orderSchema.safeParse(req.body);
-  if (!result.success) {
-    return res.status(400).json({ error: firstError(result.error) });
+  try {
+    const result = orderSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: firstError(result.error) });
+    }
+    const { amount } = result.data;
+
+    // make our own id first, so the receipt can be short: "kp_" + id (27 characters)
+    const id = new mongoose.Types.ObjectId();
+    const gatewayOrder = await createGatewayOrder({ amount, receipt: "kp_" + id });
+
+    await PaymentOrder.create({
+      _id: id,
+      userId: req.userId,
+      gatewayOrderId: gatewayOrder.id,
+      amount,
+    });
+
+    // never send the Key Secret. The Key Id is fine.
+    res.status(201).json({
+      orderId: gatewayOrder.id,
+      amount,
+      currency: "INR",
+      keyId: RAZORPAY_KEY_ID,
+    });
+  } catch (err) {
+    console.error("Create order failed:", err);
+    res.status(500).json({ error: "Could not create the payment order" });
   }
-  const { amount } = result.data;
-
-  // make our own id first, so the receipt can be short: "kp_" + id (27 characters)
-  const id = new mongoose.Types.ObjectId();
-  const gatewayOrder = await createGatewayOrder({ amount, receipt: "kp_" + id });
-
-  await PaymentOrder.create({
-    _id: id,
-    userId: req.userId,
-    gatewayOrderId: gatewayOrder.id,
-    amount,
-  });
-
-  // never send the Key Secret. The Key Id is fine.
-  res.status(201).json({
-    orderId: gatewayOrder.id,
-    amount,
-    currency: "INR",
-    keyId: RAZORPAY_KEY_ID,
-  });
 });
 
 // ---------------- LEVEL 3: VERIFY AND ADD MONEY ONCE ----------------

@@ -82,8 +82,7 @@ const PaymentOrder = mongoose.model(
   "PaymentOrder",
   new mongoose.Schema(
     {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
-      gatewayOrderId: { type: String, required: true, unique: true }, // Razorpay's order_...
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },      gatewayOrderId: { type: String, required: true, unique: true }, // Razorpay's order_...
       amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
       currency: { type: String, default: "INR" },
       status: { type: String, enum: ["CREATED", "PAID", "EXPIRED"], default: "CREATED" },
