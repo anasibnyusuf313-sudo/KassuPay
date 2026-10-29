@@ -9,7 +9,20 @@ const { connectDB } = require("./db");
 const { connectRedis } = require("./redis");
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3001",
+  process.env.FRONTEND_URL, // your Vercel address, set later on Render
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow tools like Postman (no origin) and the listed sites
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+  })
+);
 
 // Connect once, reuse across requests (works locally and on Vercel)
 let ready;
@@ -55,12 +68,15 @@ app.use((err, req, res, next) => {
 
 // Only listen when running locally, not on Vercel
 if (!process.env.VERCEL) {
-  init()
-    .then(() => app.listen(3000, () => console.log("Server running on http://localhost:3000")))
-    .catch((err) => {
-      console.error("Could not start:", err.message);
-      process.exit(1);
-    });
+  const PORT = process.env.PORT || 3000;
+
+async function start() {
+  await connectDB();
+  connectRedis();
+  app.listen(PORT, () => {
+    console.log("Server running on port " + PORT);
+  });
+}
 }
 
 module.exports = app;
