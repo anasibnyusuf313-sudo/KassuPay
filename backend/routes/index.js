@@ -2,17 +2,22 @@ const express = require("express");
 const userRouter = require("./user");
 const walletRouter = require("./wallet");
 const adminRouter = require("./admin");
-const paymentsRouter = require("./payments"); // NEW
-const pinRouter = require("./pin"); // NEW, with the other requires
+const paymentsRouter = require("./payments");
+const pinRouter = require("./pin");
+const bankRouter = require("./bank");
+const withdrawRouter = require("./withdraw");
 
 const router = express.Router();
 
 router.use("/user", userRouter);
-router.use("/pin", pinRouter); // NEW, before /wallet
-router.use("/wallet/add-money", paymentsRouter); // NEW, before /wallet
+router.use("/pin", pinRouter);
+
+// these must come BEFORE "/wallet", otherwise walletRouter catches them first
+router.use("/wallet/add-money", paymentsRouter);
+router.use("/wallet/bank-accounts", bankRouter);
+router.use("/wallet/withdrawals", withdrawRouter);
+
 router.use("/wallet", walletRouter);
-router.use("/bank", require("./bank"));
-router.use("/withdraw", require("./withdraw"));
 router.use("/admin", adminRouter);
 
 module.exports = router;
