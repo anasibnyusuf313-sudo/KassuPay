@@ -6,7 +6,6 @@ import { api, ApiError, errorMessage } from "@/lib/api";
 import { rupees } from "@/lib/format";
 import type {
   BankAccount,
-  BankAccountsResponse,
   WithdrawResponse,
   Withdrawal,
   WithdrawalsResponse,
@@ -48,10 +47,12 @@ export default function WithdrawPage() {
   }, []);
 
   useEffect(() => {
-    api<BankAccountsResponse>("/wallet/bank-accounts", { auth: true })
+    // the backend returns a plain array of accounts
+    api<BankAccount[]>("/wallet/bank-accounts", { auth: true })
       .then((data) => {
-        setAccounts(data.accounts);
-        if (data.accounts.length > 0) setSelected(data.accounts[0].id);
+        const list = Array.isArray(data) ? data : [];
+        setAccounts(list);
+        if (list.length > 0) setSelected(list[0].id);
       })
       .catch(() => setAccounts([]));
     loadWithdrawals();
@@ -81,7 +82,7 @@ export default function WithdrawPage() {
     setMessage({ text: "Requesting your withdrawal...", kind: "info" });
 
     try {
-      const data = await api<WithdrawResponse>("/wallet/withdraw", {
+      const data = await api<WithdrawResponse>("/wallet/withdrawals", {
         method: "POST",
         auth: true,
         headers: { "Idempotency-Key": pending.current.key ?? "" },
@@ -151,7 +152,7 @@ export default function WithdrawPage() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium text-gray-900">{a.accountHolderName}</span>
                         <span className="block text-xs text-gray-500">
-                          {a.account} · {a.ifsc}
+                          •••• {a.last4} · {a.ifsc}
                         </span>
                       </span>
                     </label>
