@@ -40,7 +40,7 @@ export default function WithdrawForm({ accounts, balance, onWithdrawn }: Props) 
     setMessage({ text: "Withdrawing...", kind: "info" });
 
     try {
-      await api<WithdrawResponse>("/wallet/withdraw", {
+      await api<WithdrawResponse>("/wallet/withdrawals", {
         method: "POST",
         auth: true,
         body: { bankAccountId: selected.id, amount: paise },
@@ -60,7 +60,7 @@ export default function WithdrawForm({ accounts, balance, onWithdrawn }: Props) 
       <section className={cardClass}>
         <h2 className="mb-2 text-lg font-semibold text-gray-900">Withdraw money</h2>
         <p className="mb-4 text-sm text-gray-500">Add a bank account first, then you can withdraw.</p>
-        <Link href="/bank-accounts" className={btnClass}>
+        <Link href="/banks" className={btnClass}>
           Add bank account
         </Link>
       </section>
