@@ -12,7 +12,7 @@ import Spinner from "@/components/Spinner";
 
 export default function BanksPage() {
   const [accounts, setAccounts] = useState<BankAccount[] | null>(null);
-  const [form, setForm] = useState({ holderName: "", accountNumber: "", ifsc: "" });
+  const [form, setForm] = useState({ accountHolderName: "", accountNumber: "", ifsc: "" });
   const [message, setMessage] = useState<{ text: string; kind: AlertKind }>({ text: "", kind: "info" });
   const [busy, setBusy] = useState(false);
 
@@ -47,12 +47,12 @@ export default function BanksPage() {
         method: "POST",
         auth: true,
         body: {
-          holderName: form.holderName.trim(),
+          accountHolderName: form.accountHolderName.trim(),
           accountNumber: form.accountNumber,
           ifsc: form.ifsc,
         },
       });
-      setForm({ holderName: "", accountNumber: "", ifsc: "" });
+      setForm({ accountHolderName: "", accountNumber: "", ifsc: "" });
       setMessage({ text: "Bank account added", kind: "success" });
       await load();
     } catch (err) {
@@ -72,7 +72,7 @@ export default function BanksPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className={labelClass}>
               Account holder name
-              <input className={inputClass} name="holderName" value={form.holderName} onChange={update} minLength={2} maxLength={60} required />
+              <input className={inputClass} name="accountHolderName" value={form.accountHolderName} onChange={update} minLength={2} maxLength={60} required />
             </label>
             <label className={labelClass}>
               Account number
@@ -114,7 +114,7 @@ export default function BanksPage() {
                     <Icon name="bank" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">{a.holderName}</p>
+                    <p className="truncate text-sm font-medium text-gray-900">{a.accountHolderName}</p>
                     <p className="text-xs text-gray-500">
                       {a.account} · {a.ifsc}
                     </p>

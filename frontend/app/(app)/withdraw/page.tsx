@@ -149,7 +149,7 @@ export default function WithdrawPage() {
                     >
                       <input type="radio" name="bank" checked={selected === a.id} onChange={() => setSelected(a.id)} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-gray-900">{a.holderName}</span>
+                        <span className="block truncate font-medium text-gray-900">{a.accountHolderName}</span>
                         <span className="block text-xs text-gray-500">
                           {a.account} · {a.ifsc}
                         </span>
