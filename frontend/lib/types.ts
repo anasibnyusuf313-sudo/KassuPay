@@ -36,7 +36,8 @@ export type CreateOrderResponse = { orderId: string; amount: number; currency: s
 export type VerifyResponse = { message: string; orderId: string; amount: number; balance: number };
 
 // ---- bank accounts and withdrawals ----
-export type BankAccount = { id: string; holderName: string; account: string; ifsc: string };
+export type BankAccount = { id: string; holderName: string; account: string; ifsc: string ;accountHolderName: string;
+  last4: string;};
 export type BankAccountsResponse = { accounts: BankAccount[] };
 
 export type WithdrawStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "REVERSED" | "NEEDS_REVIEW";
