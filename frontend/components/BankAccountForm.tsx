@@ -22,7 +22,7 @@ export default function BankAccountForm({ onAdded }: Props) {
     setMessage({ text: "Saving...", kind: "info" });
 
     try {
-      const account = await api<BankAccount>("/bank", {
+      const account = await api<BankAccount>("/wallet/bank-accounts", {
         method: "POST",
         auth: true,
         body: {
