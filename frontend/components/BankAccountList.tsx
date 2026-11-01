@@ -20,7 +20,7 @@ export default function BankAccountList({ accounts, onDeleted }: Props) {
     setBusyId(id);
     setError("");
     try {
-      await api<{ message: string }>(`/bank/${id}`, { method: "DELETE", auth: true });
+      await api<{ message: string }>(`/wallet/bank-accounts/${id}`, { method: "DELETE", auth: true });
       onDeleted(id);
     } catch (err) {
       setError(errorMessage(err));

@@ -11,15 +11,15 @@ import PageHeader from "@/components/PageHeader";
 import Spinner from "@/components/Spinner";
 
 export default function BanksPage() {
-  const [accounts, setAccounts] = useState<BankAccount[] | null>(null);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [form, setForm] = useState({ accountHolderName: "", accountNumber: "", ifsc: "" });
   const [message, setMessage] = useState<{ text: string; kind: AlertKind }>({ text: "", kind: "info" });
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const data = await api<BankAccountsResponse>("/wallet/bank-accounts", { auth: true });
-      setAccounts(data.accounts);
+      const data = await api<BankAccount[]>("/wallet/bank-accounts", { auth: true });
+        setAccounts(Array.isArray(data) ? data : []);
     } catch (err) {
       setAccounts([]);
       setMessage({ text: errorMessage(err), kind: "error" });

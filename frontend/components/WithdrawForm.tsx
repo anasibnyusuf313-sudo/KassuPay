@@ -40,7 +40,7 @@ export default function WithdrawForm({ accounts, balance, onWithdrawn }: Props) 
     setMessage({ text: "Withdrawing...", kind: "info" });
 
     try {
-      await api<WithdrawResponse>("/withdraw", {
+      await api<WithdrawResponse>("/wallet/withdraw", {
         method: "POST",
         auth: true,
         body: { bankAccountId: selected.id, amount: paise },
