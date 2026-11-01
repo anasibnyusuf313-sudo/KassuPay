@@ -1,7 +1,7 @@
 const express = require("express");
 const { z } = require("zod");
 const bcrypt = require("bcryptjs");
-const authMiddleware = require("../middleware"); // use the same require line as in your wallet.js
+const authMiddleware = require("../authmiddleware"); // use the same require line as in your wallet.js
 const { User } = require("../db");
 const { PinError, checkPin } = require("../services/pin");
 const { cacheDel } = require("../redis");
