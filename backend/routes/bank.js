@@ -22,7 +22,7 @@ const publicView = (a) => ({
 // Add a bank account
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const name = String(req.body.accountHolderName || "").trim();
+    const name = String(req.body.accountHolderName || req.body.holderName || "").trim();
     const accountNumber = String(req.body.accountNumber || "").trim();
     const ifsc = String(req.body.ifsc || "").trim().toUpperCase();
 
