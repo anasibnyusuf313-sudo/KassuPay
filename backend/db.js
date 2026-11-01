@@ -82,15 +82,16 @@ const PaymentOrder = mongoose.model(
   "PaymentOrder",
   new mongoose.Schema(
     {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },       // Razorpay's order_...
-      amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
-      currency: { type: String, default: "INR" },
-      status: { type: String, enum: ["CREATED", "PAID", "EXPIRED"], default: "CREATED" },
-      gatewayPaymentId: String, // pay_..., set when paid
-      paidVia: { type: String, enum: ["CALLBACK", "WEBHOOK"] }, // who won the race
-      transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
-    },
-    { timestamps: true }
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  gatewayOrderId: { type: String, required: true, unique: true }, // Razorpay's order_...
+  amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
+  currency: { type: String, default: "INR" },
+  status: { type: String, enum: ["CREATED", "PAID", "EXPIRED"], default: "CREATED" },
+  gatewayPaymentId: String, // pay_..., set when paid
+  paidVia: { type: String, enum: ["CALLBACK", "WEBHOOK"] }, // who won the race
+  transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+},
+{ timestamps: true }
   )
 );
 
