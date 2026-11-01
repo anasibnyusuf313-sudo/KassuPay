@@ -8,19 +8,22 @@ import { btnClass, cardClass, inputBase, inputClass, labelClass, secondaryBtnCla
 import Alert, { type AlertKind } from "@/components/Alert";
 import Spinner from "@/components/Spinner";
 
-type Props = { onSent: (newBalance: number) => void };
+type Props = {
+  onSent: (newBalance: number) => void;
+  hasPin: boolean | null;
+};
 
 const QUICK_AMOUNTS = [100, 500, 1000];
 
-export default function SendMoneyForm({ onSent }: Props) {
+export default function SendMoneyForm({ onSent, hasPin }: Props) {
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState(""); // in rupees, as typed
   const [note, setNote] = useState("");
+  const [pin, setPin] = useState("");
   const [message, setMessage] = useState<{ text: string; kind: AlertKind }>({ text: "", kind: "info" });
   const [sending, setSending] = useState(false);
 
-  // One Idempotency-Key per payment. If the network fails and the user taps Send
-  // again with the SAME details, we reuse the key, so money can never move twice.
+  // One Idempotency-Key per payment. The PIN is NOT part of the signature.
   const pending = useRef<{ signature: string; key: string | null }>({ signature: "", key: null });
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -40,7 +43,7 @@ export default function SendMoneyForm({ onSent }: Props) {
         method: "POST",
         auth: true,
         headers: { "Idempotency-Key": pending.current.key ?? "" },
-        body: { to: to.trim(), amount: paise, note: note.trim() },
+        body: { to: to.trim(), amount: paise, note: note.trim(), pin },
       });
       pending.current = { signature: "", key: null };
       setMessage({ text: `Sent ${rupees(paise)} to ${to.trim()}`, kind: "success" });
@@ -49,8 +52,6 @@ export default function SendMoneyForm({ onSent }: Props) {
       setNote("");
       onSent(data.balance);
     } catch (err) {
-      // A clear refusal (400, 404, 422) is final, so the next try gets a new key.
-      // If we are not sure what happened (no answer, 409, 500), keep the key.
       const status = err instanceof ApiError ? err.status : undefined;
       const network = err instanceof ApiError && err.network;
       const sure = status !== undefined && status >= 400 && status < 500 && status !== 409;
@@ -61,18 +62,27 @@ export default function SendMoneyForm({ onSent }: Props) {
         kind: "error",
       });
     } finally {
+      setPin(""); // never keep a PIN on screen after an attempt
       setSending(false);
     }
   }
+
+  const locked = hasPin === false; // no PIN yet
 
   return (
     <section className={cardClass}>
       <h2 className="mb-4 text-lg font-semibold text-gray-900">Send money</h2>
 
+      {locked && (
+        <div className="mb-4">
+          <Alert text="Set your payment PIN below before you can send money." kind="info" />
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className={labelClass}>
           Send to (email)
-          <input className={inputClass} type="email" placeholder="friend@example.com" value={to} onChange={(e) => setTo(e.target.value)} required />
+          <input className={inputClass} type="email" placeholder="friend@example.com" value={to} onChange={(e) => setTo(e.target.value)} required disabled={locked} />
         </label>
 
         <div>
@@ -92,11 +102,12 @@ export default function SendMoneyForm({ onSent }: Props) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
+              disabled={locked}
             />
           </div>
           <div className="mt-2 flex gap-2">
             {QUICK_AMOUNTS.map((v) => (
-              <button key={v} type="button" className={secondaryBtnClass} onClick={() => setAmount(String(v))}>
+              <button key={v} type="button" className={secondaryBtnClass} onClick={() => setAmount(String(v))} disabled={locked}>
                 ₹{v}
               </button>
             ))}
@@ -105,10 +116,26 @@ export default function SendMoneyForm({ onSent }: Props) {
 
         <label className={labelClass}>
           Note <span className="font-normal text-gray-400">(optional)</span>
-          <input className={inputClass} type="text" maxLength={50} placeholder="Lunch, rent, chai..." value={note} onChange={(e) => setNote(e.target.value)} />
+          <input className={inputClass} type="text" maxLength={50} placeholder="Lunch, rent, chai..." value={note} onChange={(e) => setNote(e.target.value)} disabled={locked} />
         </label>
 
-        <button type="submit" className={btnClass} disabled={sending}>
+        <label className={labelClass}>
+          Payment PIN
+          <input
+            className={inputClass + " tracking-[0.5em]"}
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={4}
+            placeholder="••••"
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            required
+            disabled={locked}
+          />
+        </label>
+
+        <button type="submit" className={btnClass} disabled={sending || locked}>
           {sending && <Spinner />}
           {sending ? "Sending..." : "Send money"}
         </button>

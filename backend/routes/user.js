@@ -41,9 +41,20 @@ router.post("/signup", async (req, res) => {
   // 3. Hash the password. We never store the password itself.
   const passwordHash = await bcrypt.hash(password, 10);
 
+   
+
   // 4. Save the user in MongoDB
   const user = new User({ username, firstName, lastName, passwordHash });
   await user.save();
+
+    const profile = {
+    id: user.id,
+    username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    createdAt: user.createdAt,
+    hasPin: Boolean(user.pinSetAt), // NEW
+  };
 
   // 5. Create a wallet for the user, starting with 0 balance (in paise)
   const wallet = new Wallet({ userId: user.id, balance: 0 });

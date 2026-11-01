@@ -1,7 +1,8 @@
 export type SigninResponse = { message: string; token: string };
 
+
 export type MeResponse = {
-  user: { id: string; username: string; firstName: string; lastName: string; createdAt?: string };
+  user: { id: string; username: string; firstName: string; lastName: string; createdAt?: string; hasPin?: boolean };
 };
 
 export type BalanceResponse = { balance: number; display: string }; // balance is in paise

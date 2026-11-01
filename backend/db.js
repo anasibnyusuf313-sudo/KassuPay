@@ -13,6 +13,7 @@ const User = mongoose.model(
       firstName: { type: String, required: true, trim: true, maxLength: 50 },
       lastName: { type: String, required: true, trim: true, maxLength: 50 },
       passwordHash: { type: String, required: true },
+      pinHash: { type: String, default: null, select: false },
     },
     { timestamps: true }
   )
@@ -49,6 +50,14 @@ const Transaction = mongoose.model(
     { timestamps: true }
   )
 );
+
+      const userSchema = new mongoose.Schema({
+        // ...existing fields (username, firstName, lastName, passwordHash, etc.)
+        pinHash: { type: String, default: null, select: false }, // hidden from normal queries
+        pinSetAt: { type: Date, default: null },
+        pinFailedAttempts: { type: Number, default: 0 },
+        pinLockedUntil: { type: Date, default: null },
+      });
 
 const ledgerSchema = new mongoose.Schema(
   {

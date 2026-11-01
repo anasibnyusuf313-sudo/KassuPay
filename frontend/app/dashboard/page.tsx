@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, clearToken, errorMessage, getToken } from "@/lib/api";
@@ -10,10 +10,12 @@ import Logo from "@/components/logo";
 import BalanceCard from "@/components/BalanceCard";
 import SendMoneyForm from "@/components/SendMoneyForm";
 import HistoryTable from "@/components/HistoryTable";
+import PinCard from "@/components/PinCard";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [hasPin, setHasPin] = useState<boolean | null>(null); // null = not known yet
   const [balance, setBalance] = useState<number | null>(null); // in paise
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [error, setError] = useState("");
@@ -29,14 +31,16 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // not signed in? go back to the sign in page
     if (!getToken()) {
       router.replace("/");
       return;
     }
 
     api<MeResponse>("/user/me", { auth: true })
-      .then((data) => setName(`${data.user.firstName} ${data.user.lastName}`))
+      .then((data) => {
+        setName(`${data.user.firstName} ${data.user.lastName}`);
+        setHasPin(Boolean(data.user.hasPin));
+      })
       .catch(() => {});
     loadBalance().catch((err) => setError(errorMessage(err)));
     loadHistory(1).catch((err) => setError(errorMessage(err)));
@@ -49,7 +53,7 @@ export default function DashboardPage() {
   }
 
   function handleSent(newBalance: number) {
-    setBalance(newBalance); // the transfer reply carries the new balance
+    setBalance(newBalance);
     loadHistory(1).catch(() => {});
   }
 
@@ -95,12 +99,8 @@ export default function DashboardPage() {
         <div className="grid gap-5 lg:grid-cols-5">
           <div className="space-y-5 lg:col-span-2">
             <BalanceCard balance={balance} onRefresh={refreshAll} />
-               <div className="flex flex-wrap gap-2">
-              <Link href="/add-money" className={secondaryBtnClass}>Add money</Link>
-              <Link href="/withdraw" className={secondaryBtnClass}>Withdraw</Link>
-              <Link href="/bank-accounts" className={secondaryBtnClass}>Bank accounts</Link>
-            </div>
-            <SendMoneyForm onSent={handleSent} />
+            <SendMoneyForm onSent={handleSent} hasPin={hasPin} />
+            <PinCard hasPin={hasPin} onChanged={() => setHasPin(true)} />
           </div>
           <div className="lg:col-span-3">
             <HistoryTable

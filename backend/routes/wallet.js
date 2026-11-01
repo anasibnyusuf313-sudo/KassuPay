@@ -1,6 +1,7 @@
 const express = require("express");
 const { z } = require("zod");
 const authMiddleware = require("../authmiddleware");
+const { PinError, checkPin } = require("../services/pin");
 const { User, Wallet, LedgerEntry, IdempotencyRecord } = require("../db");
 const { MoneyError, runTransfer } = require("../services/money");
 
@@ -25,6 +26,7 @@ router.get("/balance", authMiddleware, async (req, res) => {
 });
 
 // ---------------- TRANSFER ----------------
+// ---------------- TRANSFER ----------------
 const transferSchema = z.object({
   to: z.string().trim().toLowerCase().email("must be a valid email"),
   amount: z
@@ -33,6 +35,7 @@ const transferSchema = z.object({
     .min(100, "must be at least 100 paise")
     .max(1000000, "must be at most 1000000 paise"),
   note: z.string().trim().max(50, "is too long").default(""),
+  pin: z.string().regex(/^\d{4}$/, "must be exactly 4 digits"), // NEW
 });
 
 router.post("/transfer", authMiddleware, async (req, res) => {
@@ -47,7 +50,18 @@ router.post("/transfer", authMiddleware, async (req, res) => {
   if (!result.success) {
     return res.status(400).json({ error: firstError(result.error) });
   }
-  const { to, amount, note } = result.data;
+  const { to, amount, note, pin } = result.data;
+
+  // 2b. NEW: check the payment PIN before anything else.
+  //     A wrong PIN does not use up the Idempotency-Key.
+  try {
+    await checkPin(req.userId, pin);
+  } catch (err) {
+    if (err instanceof PinError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    throw err;
+  }
 
   // 3. Does the receiver exist?
   const receiver = await User.findOne({ username: to });
@@ -55,12 +69,12 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     return res.status(404).json({ error: "Receiver not found" });
   }
 
-  // 4. Sending to yourself? (ObjectId vs text: use .equals)
+  // 4. Sending to yourself?
   if (receiver._id.equals(req.userId)) {
     return res.status(400).json({ error: "You cannot send money to yourself" });
   }
 
-  // 5. Claim the key. The unique (userId, key) pair lets only one copy win.
+  // 5. Claim the key. The PIN is NOT part of this saved copy: we never store it.
   const requestHash = JSON.stringify({ to, amount, note });
   let record;
   try {
@@ -71,9 +85,8 @@ router.post("/transfer", authMiddleware, async (req, res) => {
       state: "IN_PROGRESS",
     });
   } catch (err) {
-    if (err.code !== 11000) throw err; // a real problem
+    if (err.code !== 11000) throw err;
 
-    // The key was already used. What happened to it?
     const existing = await IdempotencyRecord.findOne({ userId: req.userId, key });
     if (!existing || existing.state === "IN_PROGRESS") {
       return res.status(409).json({ error: "This transfer is still being processed" });
@@ -83,7 +96,6 @@ router.post("/transfer", authMiddleware, async (req, res) => {
         .status(422)
         .json({ error: "This Idempotency-Key was already used for a different transfer" });
     }
-    // same request, already done: send back the saved reply, move no money
     return res.status(existing.responseStatus).json(existing.responseBody);
   }
 
@@ -99,7 +111,6 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     return res.status(201).json(body);
   } catch (err) {
     if (err instanceof MoneyError) {
-      // an expected failure: save it, so a retry gets the same answer
       const body = { error: err.message };
       await IdempotencyRecord.updateOne(
         { _id: record._id },
@@ -107,7 +118,6 @@ router.post("/transfer", authMiddleware, async (req, res) => {
       );
       return res.status(err.status).json(body);
     }
-    // an unexpected failure: free the key so the user can retry
     await IdempotencyRecord.deleteOne({ _id: record._id });
     throw err;
   }

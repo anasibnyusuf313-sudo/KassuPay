@@ -4,6 +4,7 @@ const { z } = require("zod");
 const authMiddleware = require("../authmiddleware");
 const Withdrawal = require("../models/Withdrawal");
 const { withdrawMoney, settleWithdrawal } = require("../services/money");
+const { PinError, checkPin } = require("../services/pin");
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ const withdrawSchema = z.object({
     .int("must be whole paise")
     .min(100, "must be at least 100 paise")
     .max(1000000, "must be at most 1000000 paise"),
+  pin: z.string().regex(/^\d{4}$/, "must be exactly 4 digits"),
 });
 
 const publicView = (w) => ({
@@ -43,7 +45,17 @@ router.post("/", authMiddleware, async (req, res) => {
     if (!result.success) {
       return res.status(400).json({ error: firstError(result.error) });
     }
-    const { bankAccountId, amount } = result.data;
+    const { bankAccountId, amount, pin } = result.data;
+
+    // Check the payment PIN before proceeding
+    try {
+      await checkPin(uid(req), pin);
+    } catch (err) {
+      if (err instanceof PinError) {
+        return res.status(err.status).json({ error: err.message });
+      }
+      throw err;
+    }
 
     const withdrawal = await withdrawMoney({
       userId: uid(req),
