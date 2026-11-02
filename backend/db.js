@@ -16,7 +16,6 @@ async function connectDB() {
     // the collection may not exist yet, which is fine
   }
 }
-
 const User = mongoose.model(
   "User",
   new mongoose.Schema(
@@ -26,6 +25,9 @@ const User = mongoose.model(
       lastName: { type: String, required: true, trim: true, maxLength: 50 },
       passwordHash: { type: String, required: true },
       pinHash: { type: String, default: null, select: false },
+      pinSetAt: { type: Date, default: null },
+      pinFailedAttempts: { type: Number, default: 0 },
+      pinLockedUntil: { type: Date, default: null },
     },
     { timestamps: true }
   )

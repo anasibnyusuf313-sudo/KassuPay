@@ -123,6 +123,7 @@ router.get("/me", authMiddleware, async (req, res) => {
     firstName: user.firstName,
     lastName: user.lastName,
     createdAt: user.createdAt,
+    hasPin: Boolean(user.pinSetAt), // NEW
   };
 
   // 3. Save a copy for 60 seconds
