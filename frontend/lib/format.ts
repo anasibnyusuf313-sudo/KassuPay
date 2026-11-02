@@ -1,6 +1,9 @@
-// paise (whole number) -> "₹10.50"
+// paise (whole number) -> "₹1,307.00"
 export function rupees(paise: number): string {
-  return "₹" + (paise / 100).toFixed(2);
+  return (
+    "₹" +
+    (paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
 }
 
 export function initialsOf(name: string): string {

@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const { User } = require("../db");
 
 const MAX_TRIES = 5;
-const LOCK_MINUTES = 15;
+const LOCK_MINUTES = 5;
 
 // An expected PIN problem that carries a status code
 class PinError extends Error {
