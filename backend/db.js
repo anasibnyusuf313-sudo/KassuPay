@@ -3,6 +3,18 @@ const mongoose = require("mongoose");
 async function connectDB() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log("MongoDB connected");
+
+  // Repair: payment orders must NOT be unique per user (one person can add money many times)
+  try {
+    const indexes = await PaymentOrder.collection.indexes();
+    const bad = indexes.find((i) => i.name === "userId_1" && i.unique);
+    if (bad) {
+      await PaymentOrder.collection.dropIndex("userId_1");
+      console.log("Dropped the wrong unique index userId_1 on paymentorders");
+    }
+  } catch (err) {
+    // the collection may not exist yet, which is fine
+  }
 }
 
 const User = mongoose.model(
