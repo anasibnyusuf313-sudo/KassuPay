@@ -43,48 +43,56 @@ async function deposit({ toUser, amount, note }) {
 }
 
 // ---------- TRANSFER (all or nothing) ----------
+// The money work only. It uses a session that the CALLER opened, so it can sit
+// inside a bigger transaction (the Day 7 pay-request route does exactly that).
+async function transferInSession({ session, fromUserId, toUser, amount, note }) {
+  const senderWallet = await Wallet.findOneAndUpdate(
+    { userId: fromUserId, balance: { $gte: amount } },
+    { $inc: { balance: -amount } },
+    { returnDocument: "after", session }
+  );
+  if (!senderWallet) throw new MoneyError(400, "Insufficient balance");
+
+  const receiverWallet = await Wallet.findOneAndUpdate(
+    { userId: toUser._id },
+    { $inc: { balance: amount } },
+    { returnDocument: "after", session }
+  );
+  if (!receiverWallet) throw new MoneyError(404, "Receiver not found");
+
+  const [txn] = await Transaction.create(
+    [{ type: "TRANSFER", fromUserId, toUserId: toUser._id, amount, note }],
+    { session }
+  );
+
+  await LedgerEntry.create(
+    [
+      { userId: fromUserId, transactionId: txn._id, direction: "DEBIT", amount, balanceAfter: senderWallet.balance },
+      { userId: toUser._id, transactionId: txn._id, direction: "CREDIT", amount, balanceAfter: receiverWallet.balance },
+    ],
+    { session, ordered: true }
+  );
+
+  return {
+    transaction: {
+      id: txn._id.toString(),
+      to: toUser.username,
+      amount,
+      note,
+      createdAt: txn.createdAt,
+    },
+    balance: senderWallet.balance,
+  };
+}
+
+// Thin wrapper: opens the transaction, then calls the function above.
+// The /transfer route keeps working exactly as before.
 async function runTransfer({ fromUserId, toUser, amount, note }) {
   const session = await mongoose.startSession();
   try {
     let result;
     await session.withTransaction(async () => {
-      const senderWallet = await Wallet.findOneAndUpdate(
-        { userId: fromUserId, balance: { $gte: amount } },
-        { $inc: { balance: -amount } },
-        { returnDocument: "after", session }
-      );
-      if (!senderWallet) throw new MoneyError(400, "Insufficient balance");
-
-      const receiverWallet = await Wallet.findOneAndUpdate(
-        { userId: toUser._id },
-        { $inc: { balance: amount } },
-        { returnDocument: "after", session }
-      );
-      if (!receiverWallet) throw new MoneyError(404, "Receiver not found");
-
-      const [txn] = await Transaction.create(
-        [{ type: "TRANSFER", fromUserId, toUserId: toUser._id, amount, note }],
-        { session }
-      );
-
-      await LedgerEntry.create(
-        [
-          { userId: fromUserId, transactionId: txn._id, direction: "DEBIT", amount, balanceAfter: senderWallet.balance },
-          { userId: toUser._id, transactionId: txn._id, direction: "CREDIT", amount, balanceAfter: receiverWallet.balance },
-        ],
-        { session, ordered: true }
-      );
-
-      result = {
-        transaction: {
-          id: txn._id.toString(),
-          to: toUser.username,
-          amount,
-          note,
-          createdAt: txn.createdAt,
-        },
-        balance: senderWallet.balance,
-      };
+      result = await transferInSession({ session, fromUserId, toUser, amount, note });
     });
     return result;
   } finally {
@@ -214,4 +222,4 @@ async function settleWithdrawal(withdrawalId, success) {
   }
 }
 
-module.exports = { MoneyError, deposit, runTransfer, creditTopUp, withdrawMoney, settleWithdrawal }; // NEW: withdrawMoney, settleWithdrawal
+module.exports = { MoneyError, deposit, runTransfer, transferInSession, creditTopUp, withdrawMoney, settleWithdrawal }; // NEW: withdrawMoney, settleWithdrawal

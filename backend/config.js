@@ -17,4 +17,9 @@ module.exports = {
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+
+  // ---- Day 7: request money ----
+  REQUEST_EXPIRY_DAYS: 7,
+  MAX_PENDING_PER_PAYER: 5,
+  DAILY_LIMIT_PAISE: 1000000, // ₹10,000 a day (Day 6). Use your own constant if you have one.
 };
