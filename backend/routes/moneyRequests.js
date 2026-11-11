@@ -11,7 +11,7 @@ const {
   cancelRequest,
   expireOldFor,
   payRequest,
-} = require("../services/requests");
+} = require("../services/requestService");
 const { rateLimit } = require("../services/rateLimit");
 const { REQUEST_EXPIRY_DAYS, MAX_PENDING_PER_PAYER } = require("../config");
 
@@ -155,6 +155,28 @@ function listRoute(side) {
     });
   };
 }
+
+// ---------------- FIND A PERSON BY EMAIL (for the "Request money" form) ----------------
+// Returns only the id and the name. Rate limited so it cannot be used to scan for emails.
+const lookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: "Too many lookups. Wait a moment.",
+});
+const lookupSchema = z.object({ email: z.string().trim().toLowerCase().email("must be a valid email") });
+
+router.get("/lookup", authMiddleware, lookupLimiter, async (req, res) => {
+  const result = lookupSchema.safeParse(req.query);
+  if (!result.success) {
+    return res.status(400).json({ error: firstError(result.error) });
+  }
+  const user = await User.findOne({ username: result.data.email }).select("firstName lastName");
+  if (!user) return res.status(404).json({ error: "User not found" });
+  if (user._id.equals(req.userId)) {
+    return res.status(400).json({ error: "You can't request money from yourself" });
+  }
+  res.json({ user: { id: user._id.toString(), name: fullName(user) } });
+});
 
 // These two MUST come before "/:id", or "incoming" would be read as an id
 router.get("/incoming", authMiddleware, listRoute("payerId"));

@@ -6,7 +6,7 @@ const paymentsRouter = require("./payments");
 const pinRouter = require("./pin");
 const bankRouter = require("./bank");
 const withdrawRouter = require("./withdraw");
-const requestsRouter = require("./requests"); // Day 7
+const requestsRouter = require("./moneyRequests"); // Day 7
 
 const router = express.Router();
 
