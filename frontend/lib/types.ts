@@ -59,3 +59,26 @@ export type WithdrawResponse = {
   withdrawal: { id: string; amount: number; status: WithdrawStatus; account: string };
   balance: number;
 };
+// ---- request money (Day 7) ----
+export type RequestStatus = "PENDING" | "PAID" | "DECLINED" | "CANCELLED" | "EXPIRED";
+
+export type MoneyRequest = {
+  id: string;
+  from: string; // who asked
+  to: string; // who was asked
+  direction: "INCOMING" | "OUTGOING"; // seen from the signed-in user
+  amount: number; // paise
+  note: string;
+  status: RequestStatus;
+  createdAt: string;
+  expiresAt: string;
+  transactionId: string | null;
+};
+
+export type RequestsResponse = { requests: MoneyRequest[] };
+export type LookupResponse = { user: { id: string; name: string } };
+export type CreateRequestResponse = {
+  message: string;
+  request: { id: string; to: string; amount: number; note: string; status: RequestStatus; expiresAt: string };
+};
+export type PayRequestResponse = { message: string; transactionId: string; balance: number };

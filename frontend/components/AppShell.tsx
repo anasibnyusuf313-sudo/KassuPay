@@ -15,6 +15,7 @@ const MAIN: Item[] = [
   { href: "/send", label: "Send", icon: "send" },
   { href: "/add-money", label: "Add money", icon: "add" },
   { href: "/withdraw", label: "Withdraw", icon: "withdraw" },
+  { href: "/requests", label: "Requests", icon: "send" }, // NEW (Day 7). Swap the icon if Icons.tsx has a better one
 ];
 
 const MANAGE: Item[] = [
@@ -23,8 +24,8 @@ const MANAGE: Item[] = [
   { href: "/settings", label: "Account", icon: "user" },
 ];
 
-// the phone bar has room for five
-const PHONE = ["/dashboard", "/send", "/add-money", "/withdraw", "/settings"];
+// the phone bar now has six (Requests added)
+const PHONE = ["/dashboard", "/send", "/add-money", "/withdraw", "/requests", "/settings"];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -97,7 +98,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {/* tab bar, phones only */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {[...MAIN, ...MANAGE]
             .filter((i) => PHONE.includes(i.href))
             .map((item) => (
