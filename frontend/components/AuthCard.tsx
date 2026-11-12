@@ -6,16 +6,11 @@ import { api, errorMessage, getToken, saveToken } from "@/lib/api";
 import type { SigninResponse } from "@/lib/types";
 import { btnClass, inputClass, labelClass } from "@/lib/ui";
 import Alert, { type AlertKind } from "@/components/Alert";
+import AuthShowcase from "@/components/authshowcase";
 import Logo from "@/components/logo";
 import Spinner from "@/components/Spinner";
 
 type Mode = "signin" | "signup";
-
-const POINTS = [
-  "Add money with UPI or card",
-  "Send money to anyone with a secret PIN",
-  "Withdraw to your bank account",
-];
 
 export default function AuthCard() {
   const router = useRouter();
@@ -79,26 +74,13 @@ export default function AuthCard() {
   return (
     <div className="flex min-h-screen">
       {/* brand panel, desktop only */}
-      <aside className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-linear-to-br from-slate-900 via-slate-800 to-teal-900 p-12 text-white lg:flex">
+      <aside className="relative hidden flex-1 flex-col justify-between overflow-y-auto bg-linear-to-br from-slate-900 via-slate-800 to-teal-900 p-10 text-white lg:sticky lg:top-0 lg:flex lg:h-screen">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-teal-400/20 blur-3xl" />
         <div className="relative">
           <Logo dark large />
         </div>
-        <div className="relative max-w-md">
-          <h2 className="text-4xl font-semibold leading-tight tracking-tight">Your money, in your hands.</h2>
-          <p className="mt-4 text-slate-300">A simple wallet to add money, pay friends and withdraw to your bank.</p>
-          <ul className="mt-8 space-y-4 text-sm">
-            {POINTS.map((p) => (
-              <li key={p} className="flex items-center gap-3 text-slate-200">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-400/20 text-teal-300">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                {p}
-              </li>
-            ))}
-          </ul>
+        <div className="relative my-8">
+          <AuthShowcase />
         </div>
         <p className="relative text-xs text-slate-400">Test mode: no real money moves.</p>
       </aside>
