@@ -1,50 +1,49 @@
-// ============================================================================
-// THE ONLY FILE YOU MUST EDIT.
-//
-// AutoPay reuses code you wrote on earlier days. I could not see those files,
-// so the four things below are the "plugs". Point each one at your own code.
-// Everything else in the Day 10 files stays as it is.
-// ============================================================================
+// The plugs between AutoPay and your earlier days. Already wired to your real files:
+//   db.js (User), authmiddleware.js, services/pin.js (checkPin), services/money.js (transferInSession)
 
-// 1. Your User model (used to check the payee exists and to show names).
-//    Fields used: _id, firstName, lastName.
-const User = require("../models/User"); // <- change the path if yours differs
+const { User } = require("../db");
+const authMiddleware = require("../authmiddleware"); // exports the function directly, sets req.userId
+const { checkPin, PinError } = require("../services/pin");
+const { transferInSession } = require("../services/money");
 
-// 2. Your auth middleware (Day 1 to 3). It must put the logged-in user's id on the request.
-const authMiddleware = require("../middleware/auth"); // <- change the path/name if yours differs
-
-// how to read the logged-in user's id after authMiddleware ran
 function getUserId(req) {
-  return String(req.userId || (req.user && (req.user.id || req.user._id)));
+  return String(req.userId);
 }
 
-// 3. Your Day 6 PIN check.
-//    Must return { ok: true } when the PIN is right, or
-//    { ok: false, status: 403, body: { message: "Wrong PIN. 2 tries left", triesLeft: 2 } }.
+// Day 6 checkPin THROWS a PinError when the PIN is wrong, locked or not set.
+// The AutoPay route wants a plain result instead.
 async function verifyPin(userId, pin) {
-  // EXAMPLE (adjust to your checkPin):
-  //   const { checkPin } = require("../services/pin");
-  //   return checkPin(userId, pin);
-  throw new Error("Wire verifyPin in backend/lib/autopayDeps.js");
+  try {
+    await checkPin(userId, pin);
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof PinError) {
+      const body = { message: err.message };
+      const left = /(\d+) attempts? left/.exec(err.message);
+      if (left) body.triesLeft = Number(left[1]);
+      return { ok: false, status: err.status, body };
+    }
+    throw err;
+  }
 }
 
-// 4. Your Day 7 shared money function (the one requests.js uses when a request is paid).
-//    It MUST:
-//      - run inside the given mongoose `session` (do not start your own transaction)
-//      - apply the Day 6 daily limit and write the ledger rows
-//      - throw an error when it cannot pay (insufficient balance, daily limit...)
-//      - return { transactionId }
+// The nightly job's payment. It runs inside the transaction the job opened (`session`),
+// so the claim, the money and the run record save together or not at all.
+// transferInSession throws MoneyError (400 "Insufficient balance", 404 ...) when it cannot pay.
 async function moveMoney({ session, fromUserId, toUserId, amount, note }) {
-  // EXAMPLE (adjust to your function):
-  //   const { transferMoney } = require("../services/transfer");
-  //   const tx = await transferMoney({ session, from: fromUserId, to: toUserId, amount, note });
-  //   return { transactionId: tx._id };
-  throw new Error("Wire moveMoney in backend/lib/autopayDeps.js");
+  const toUser = await User.findById(toUserId).session(session);
+  if (!toUser) {
+    const e = new Error("Payee not found");
+    e.status = 404;
+    throw e;
+  }
+  const result = await transferInSession({ session, fromUserId, toUser, amount, note });
+  return { transactionId: result.transaction.id };
 }
 
-// Turns an error from moveMoney into a short reason saved on the FAILED run.
-// "Expected" errors (no balance, daily limit) are your own Day 3 / Day 6 errors.
-// Anything else is logged as unexpected by the job.
+// Turns an error from moveMoney into the reason saved on a FAILED run.
+// MoneyError carries a status below 500 (e.g. "Insufficient balance"): expected.
+// Anything else is logged by the job as unexpected.
 function describeError(err) {
   const expected = typeof err.status === "number" && err.status < 500;
   return { expected, reason: expected ? err.message : "Payment failed" };

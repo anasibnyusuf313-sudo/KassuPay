@@ -21,6 +21,7 @@ const MAIN: Item[] = [
 const MANAGE: Item[] = [
   { href: "/banks", label: "Bank accounts", icon: "bank" },
   { href: "/history", label: "History", icon: "history" },
+  { href: "/autopay", label: "AutoPay", icon: "history" }, // NEW (Day 10)
   { href: "/settings", label: "Account", icon: "user" },
 ];
 
