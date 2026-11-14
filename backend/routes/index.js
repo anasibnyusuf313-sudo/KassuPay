@@ -20,7 +20,7 @@ router.use("/wallet/add-money", paymentsRouter);
 router.use("/wallet/bank-accounts", bankRouter);
 router.use("/wallet/withdrawals", withdrawRouter);
 
-router.use("/walltet", historyRouter); 
+router.use("/wallet", historyRouter); 
 router.use("/wallet", walletRouter);
 router.use("/admin", adminRouter);
 
