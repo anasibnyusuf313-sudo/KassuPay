@@ -38,7 +38,12 @@ export type CreateOrderResponse = { orderId: string; amount: number; currency: s
 export type VerifyResponse = { message: string; orderId: string; amount: number; balance: number };
 
 // ---- bank accounts and withdrawals ----
-export type BankAccount = { id: string; holderName: string; account: string; ifsc: string };
+export type BankAccount = {
+  id: string;
+  accountHolderName: string;
+  last4: string;
+  ifsc: string;
+};
 export type BankAccountsResponse = { accounts: BankAccount[] };
 
 export type WithdrawStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "REVERSED" | "NEEDS_REVIEW";
@@ -87,4 +92,40 @@ export type Statement = {
   closingBalance: number;
   entries: number;
   check: boolean;
+};
+
+// ---- money requests (Day 7) ----
+export type RequestStatus = "PENDING" | "PAID" | "DECLINED" | "CANCELLED" | "EXPIRED";
+
+export type MoneyRequest = {
+  id: string;
+  amount: number; // paise
+  note: string;
+  status: RequestStatus;
+  direction: "INCOMING" | "OUTGOING";
+  from: string; // display name of the requester
+  to: string; // display name of the payer
+  expiresAt: string;
+  createdAt: string;
+  decidedAt?: string | null;
+};
+
+// accepts a few possible shapes, same trick as WithdrawalsResponse
+export type RequestsResponse = {
+  requests: MoneyRequest[];
+};
+
+export type LookupResponse = {
+  user: { id: string; name: string; username?: string };
+};
+
+export type CreateRequestResponse = {
+  message?: string;
+  request?: MoneyRequest;
+};
+
+export type PayRequestResponse = {
+  message?: string;
+  request?: MoneyRequest;
+  balance: number; // paise
 };

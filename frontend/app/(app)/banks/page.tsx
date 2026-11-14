@@ -116,7 +116,7 @@ export default function BanksPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-900">{a.accountHolderName}</p>
                     <p className="text-xs text-gray-500">
-                      {a.account} · {a.ifsc}
+                      {a.last4} · {a.ifsc}
                     </p>
                   </div>
                 </li>
