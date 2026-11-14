@@ -1,8 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
 
-if (!API_URL) {
-  console.error("NEXT_PUBLIC_API_URL is not set");
-}
 // ---- token helpers (localStorage only exists in the browser) ----
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -59,7 +56,8 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
 
   let res: Response;
   try {
-      res = await fetch((API_URL ?? "") + path, settings);  } catch {
+    res = await fetch(API_URL + path, settings);
+  } catch {
     // no answer at all: server off, or no internet
     throw new ApiError("Cannot reach the server. Is the backend running?", undefined, true);
   }
@@ -84,4 +82,42 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   }
 
   return data as T;
+}
+
+// DAY 8: fetches a file with the login token, then saves it on the person's computer.
+// A normal link cannot send the token, so we download it ourselves.
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(API_URL + path, { headers: { Authorization: "Bearer " + getToken() } });
+  } catch {
+    throw new ApiError("Cannot reach the server. Is the backend running?", undefined, true);
+  }
+
+  if (res.status === 401) {
+    clearToken();
+    window.location.href = "/";
+    throw new ApiError("Please sign in again", 401);
+  }
+
+  if (!res.ok) {
+    let message = "Download failed";
+    try {
+      const data = await res.json();
+      if (data && data.error) message = data.error;
+    } catch {
+      // the reply had no JSON body
+    }
+    throw new ApiError(message, res.status);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }

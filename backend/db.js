@@ -80,10 +80,22 @@ const ledgerSchema = new mongoose.Schema(
     direction: { type: String, required: true, enum: ["DEBIT", "CREDIT"] },
     amount: { type: Number, required: true, min: 1 },
     balanceAfter: { type: Number, required: true, min: 0 },
+    type: { type: String, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] },
   },
   { timestamps: true }
 );
-ledgerSchema.index({ userId: 1, createdAt: -1 });
+ledgerSchema.index({ userId: 1, createdAt: -1, _id: -1 }); // for fetching recent ledger entries for a user
+ledgerSchema.index({ userId: 1, type: 1, createdAt: -1, _id: -1 }); // for fetching recent ledger entries of a specific type for a user
+ledgerSchema.index({ userId: 1, direction: 1, createdAt: -1, _id: -1 }); // for fetching recent ledger entries of a specific direction for a user
+
+ledgerSchema.pre("validate", async function () {
+  if (this.type || !this.transactionId) return;
+  const txn = await Transaction.findById(this.transactionId)
+    .select("type")
+    .session(this.$session()) // same transaction, so it sees the row written a moment ago
+    .lean();
+  if (txn) this.type = txn.type;
+});
 const LedgerEntry = mongoose.model("LedgerEntry", ledgerSchema);
 
 const idempotencySchema = new mongoose.Schema(

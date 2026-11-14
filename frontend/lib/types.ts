@@ -6,6 +6,7 @@ export type MeResponse = {
 
 export type BalanceResponse = { balance: number; display: string }; // balance is in paise
 
+// one history row (the old page style, still used by TransactionRow)
 export type HistoryItem = {
   transactionId: string | null;
   type: string | null;
@@ -17,6 +18,7 @@ export type HistoryItem = {
   createdAt: string;
 };
 
+// the old page-number reply (kept so nothing that still uses it breaks)
 export type HistoryResponse = {
   data: HistoryItem[];
   page: number;
@@ -36,7 +38,7 @@ export type CreateOrderResponse = { orderId: string; amount: number; currency: s
 export type VerifyResponse = { message: string; orderId: string; amount: number; balance: number };
 
 // ---- bank accounts and withdrawals ----
-export type BankAccount = { id: string; accountHolderName: string; account: string; ifsc: string; last4: string };
+export type BankAccount = { id: string; holderName: string; account: string; ifsc: string };
 export type BankAccountsResponse = { accounts: BankAccount[] };
 
 export type WithdrawStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "REVERSED" | "NEEDS_REVIEW";
@@ -59,26 +61,30 @@ export type WithdrawResponse = {
   withdrawal: { id: string; amount: number; status: WithdrawStatus; account: string };
   balance: number;
 };
-// ---- request money (Day 7) ----
-export type RequestStatus = "PENDING" | "PAID" | "DECLINED" | "CANCELLED" | "EXPIRED";
 
-export type MoneyRequest = {
+// ---- history with a cursor, and statements (Day 8) ----
+export type LedgerItem = {
   id: string;
-  from: string; // who asked
-  to: string; // who was asked
-  direction: "INCOMING" | "OUTGOING"; // seen from the signed-in user
-  amount: number; // paise
-  note: string;
-  status: RequestStatus;
-  createdAt: string;
-  expiresAt: string;
   transactionId: string | null;
+  type: string | null;
+  direction: "DEBIT" | "CREDIT";
+  amount: number; // paise
+  withWhom: string;
+  label: string;
+  note: string;
+  balanceAfter: number; // paise
+  createdAt: string;
+  at: string;
 };
 
-export type RequestsResponse = { requests: MoneyRequest[] };
-export type LookupResponse = { user: { id: string; name: string } };
-export type CreateRequestResponse = {
-  message: string;
-  request: { id: string; to: string; amount: number; note: string; status: RequestStatus; expiresAt: string };
+export type HistoryPage = { items: LedgerItem[]; nextCursor: string | null };
+
+export type Statement = {
+  month: string;
+  openingBalance: number;
+  totalIn: number;
+  totalOut: number;
+  closingBalance: number;
+  entries: number;
+  check: boolean;
 };
-export type PayRequestResponse = { message: string; transactionId: string; balance: number };

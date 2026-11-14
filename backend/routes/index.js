@@ -7,6 +7,7 @@ const pinRouter = require("./pin");
 const bankRouter = require("./bank");
 const withdrawRouter = require("./withdraw");
 const requestsRouter = require("./moneyRequests"); // Day 7
+const historyRouter = require("./history");
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.use("/wallet/add-money", paymentsRouter);
 router.use("/wallet/bank-accounts", bankRouter);
 router.use("/wallet/withdrawals", withdrawRouter);
 
+router.use("/walltet", historyRouter); 
 router.use("/wallet", walletRouter);
 router.use("/admin", adminRouter);
 
