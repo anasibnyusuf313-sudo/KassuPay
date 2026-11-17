@@ -16,6 +16,7 @@ const MAIN: Item[] = [
   { href: "/add-money", label: "Add money", icon: "add" },
   { href: "/withdraw", label: "Withdraw", icon: "withdraw" },
   { href: "/requests", label: "Requests", icon: "send" }, // NEW (Day 7). Swap the icon if Icons.tsx has a better one
+  { href: "/rewards", label: "Rewards", icon: "add" }, // Day 9. Swap the icon if Icons.tsx has a better one
 ];
 
 const MANAGE: Item[] = [
@@ -26,7 +27,7 @@ const MANAGE: Item[] = [
 ];
 
 // the phone bar now has six (Requests added)
-const PHONE = ["/dashboard", "/send", "/add-money", "/withdraw", "/requests", "/settings"];
+const PHONE = ["/dashboard", "/send", "/add-money", "/withdraw", "/requests", "/rewards", "/settings"];
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -99,7 +100,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {/* tab bar, phones only */}
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-7">
           {[...MAIN, ...MANAGE]
             .filter((i) => PHONE.includes(i.href))
             .map((item) => (
@@ -107,7 +108,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium " +
+                  "flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium " +
                   (isActive(item.href) ? "text-teal-700" : "text-slate-500")
                 }
               >

@@ -54,7 +54,7 @@ const Transaction = mongoose.model(
   "Transaction",
   new mongoose.Schema(
     {
-      type: { type: String, required: true, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] }, 
+      type: { type: String, required: true, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW", "CASHBACK"] }, 
       fromUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       toUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },

@@ -11,6 +11,9 @@ const autopayRouter = require("./autopay");
 const cronRouter = require("./cron");
 const historyRouter = require("./history");
 
+const offersAdminRouter = require("./offersAdmin"); // Day 9
+const rewardsRouter = require("./rewardsRoutes"); // Day 9
+
 const router = express.Router();
 
 router.use("/user", userRouter);
@@ -26,6 +29,10 @@ router.use("/wallet/withdrawals", withdrawRouter);
 
 router.use("/wallet", historyRouter); 
 router.use("/wallet", walletRouter);
+// Day 9: these must come BEFORE "/admin", or adminRouter catches /admin/offers first
+router.use("/admin/offers", offersAdminRouter);
+router.use("/rewards", rewardsRouter);
+
 router.use("/admin", adminRouter);
 
 module.exports = router;

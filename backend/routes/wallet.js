@@ -163,7 +163,7 @@ router.get("/transactions", authMiddleware, async (req, res) => {
       withWhom = "Added via Razorpay";
     } else if (t && t.type === "WITHDRAW") {
       withWhom = "Withdrawn to bank";
-    }
+    } else if (t && t.type === "CASHBACK") { withWhom = "Cashback"; }
     return {
       transactionId: t ? t._id.toString() : null,
       type: t ? t.type : null,

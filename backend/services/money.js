@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { maybeIssueCard } = require("./rewardService"); // Day 9
 const { Wallet, Transaction, LedgerEntry, PaymentOrder } = require("../db"); // NEW: PaymentOrder added
 const BankAccount = require("../models/BankAccount"); // NEW: withdraw feature
 const Withdrawal = require("../models/Withdrawal"); // NEW: withdraw feature
@@ -72,6 +73,15 @@ async function transferInSession({ session, fromUserId, toUser, amount, note }) 
     ],
     { session, ordered: true }
   );
+
+  // Day 9: a payment may earn a scratch card. Same transaction. It never fails the payment.
+  await maybeIssueCard({
+    session,
+    payerId: fromUserId,
+    receiverId: toUser._id,
+    amount,
+    transactionId: txn._id,
+  });
 
   return {
     transaction: {
