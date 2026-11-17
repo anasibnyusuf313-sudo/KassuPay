@@ -16,6 +16,7 @@ async function connectDB() {
     // the collection may not exist yet, which is fine
   }
 }
+
 const User = mongoose.model(
   "User",
   new mongoose.Schema(
@@ -54,24 +55,25 @@ const Transaction = mongoose.model(
   "Transaction",
   new mongoose.Schema(
     {
-      type: { type: String, required: true, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] }, 
+      type: {
+        type: String,
+        required: true,
+        enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW", "CASHBACK"],
+      },
       fromUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       toUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
+      amount: {
+        type: Number,
+        required: true,
+        min: 1,
+        validate: { validator: Number.isInteger, message: "amount must be whole paise" },
+      },
       note: { type: String, trim: true, maxLength: 50, default: "" },
       status: { type: String, default: "SUCCESS" },
     },
     { timestamps: true }
   )
 );
-
-      const userSchema = new mongoose.Schema({
-        // ...existing fields (username, firstName, lastName, passwordHash, etc.)
-        pinHash: { type: String, default: null, select: false }, // hidden from normal queries
-        pinSetAt: { type: Date, default: null },
-        pinFailedAttempts: { type: Number, default: 0 },
-        pinLockedUntil: { type: Date, default: null },
-      });
 
 const ledgerSchema = new mongoose.Schema(
   {
@@ -80,7 +82,7 @@ const ledgerSchema = new mongoose.Schema(
     direction: { type: String, required: true, enum: ["DEBIT", "CREDIT"] },
     amount: { type: Number, required: true, min: 1 },
     balanceAfter: { type: Number, required: true, min: 0 },
-    type: { type: String, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] },
+    type: { type: String, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW", "CASHBACK"] },
   },
   { timestamps: true }
 );
@@ -112,21 +114,26 @@ const idempotencySchema = new mongoose.Schema(
 idempotencySchema.index({ userId: 1, key: 1 }, { unique: true });
 const IdempotencyRecord = mongoose.model("IdempotencyRecord", idempotencySchema);
 
-// NEW: one "add money" attempt
+// One "add money" attempt
 const PaymentOrder = mongoose.model(
   "PaymentOrder",
   new mongoose.Schema(
     {
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  gatewayOrderId: { type: String, required: true, unique: true }, // Razorpay's order_...
-  amount: { type: Number, required: true, min: 1, validate: { validator: Number.isInteger, message: "amount must be whole paise" } },
-  currency: { type: String, default: "INR" },
-  status: { type: String, enum: ["CREATED", "PAID", "EXPIRED"], default: "CREATED" },
-  gatewayPaymentId: String, // pay_..., set when paid
-  paidVia: { type: String, enum: ["CALLBACK", "WEBHOOK"] }, // who won the race
-  transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
-},
-{ timestamps: true }
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+      gatewayOrderId: { type: String, required: true, unique: true }, // Razorpay's order_...
+      amount: {
+        type: Number,
+        required: true,
+        min: 1,
+        validate: { validator: Number.isInteger, message: "amount must be whole paise" },
+      },
+      currency: { type: String, default: "INR" },
+      status: { type: String, enum: ["CREATED", "PAID", "EXPIRED"], default: "CREATED" },
+      gatewayPaymentId: String, // pay_..., set when paid
+      paidVia: { type: String, enum: ["CALLBACK", "WEBHOOK"] }, // who won the race
+      transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+    },
+    { timestamps: true }
   )
 );
 
