@@ -80,7 +80,7 @@ const ledgerSchema = new mongoose.Schema(
     direction: { type: String, required: true, enum: ["DEBIT", "CREDIT"] },
     amount: { type: Number, required: true, min: 1 },
     balanceAfter: { type: Number, required: true, min: 0 },
-    type: { type: String, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW"] },
+    type: { type: String, enum: ["DEPOSIT", "TRANSFER", "TOPUP", "WITHDRAW", "CASHBACK"] },
   },
   { timestamps: true }
 );
